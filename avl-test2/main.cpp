@@ -31,6 +31,7 @@ int main() {
                 tree->print();
                 break;
             case 'R':
+                break;
                 cin >> num;
                 tree->restructure(nodes[num]);
                 break;

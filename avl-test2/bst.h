@@ -5,15 +5,20 @@ class BST {
 
 	public:
 	bool search(int num) {
-		return search_node(tree->getRoot(), num);
+        node* searched_node = search_node(tree->getRoot(), num);
+		if (searched_node != NULL) {
+            splay(searched_node);
+        }else {
+            return false;
+        }
 	}
 
-	bool search_node(node* n, int num) {
+	node* search_node(node* n, int num) {
 		if (n == NULL) {
-			return false;
+			return NULL;
 		}
 		if (n->elem == num) {
-			return true;
+			return n;
 		}
 		if (num > n->elem) {
 			// proceed to right
@@ -28,7 +33,9 @@ class BST {
 		if (n == NULL) {
 			return tree->addRoot(num);
 		}
-		return insert_node(n, num);
+        node* inserted_node = insert_node(n, num);
+        search(num);
+		return inserted_node;
 	}
 
 	node* insert_node(node* n, int num) {
@@ -54,12 +61,27 @@ class BST {
 	}
 
     bool remove(int num) {
-        return remove_node(tree->getRoot(), num);
+        search(num);
+        node* removed = remove_node(tree->getRoot(), num);
+        if (removed->right) {
+            search(searchLeftMost(removed->right));
+        }else {
+            return false;
+        }
     }
 
-	bool remove_node(node* n, int num) {
+    int searchLeftMost(node *n) {
+        node* curr = n;
+        if (curr->left) {
+            curr = curr->left;
+        }else {
+            return curr->elem;
+        }
+    }
+
+	node* remove_node(node* n, int num) {
 		if (n == NULL) {
-			return false;
+			return NULL;
 		}
 		if (n->elem == num) {
             if (n->left && n->right) {
@@ -72,7 +94,7 @@ class BST {
             } else {
     			tree->remove(n);
             }
-            return true;
+            return n;
 		}
 		if (num > n->elem) {
 			return remove_node(n->right, num);
@@ -176,6 +198,56 @@ class BST {
         }
 
         return true;
+    }
+
+    void splay(node* n) {
+        while (n != tree->getRoot()) {
+            node* par = n->parent;
+            node* gp = par->parent;
+
+            if (!gp) {
+                if(par->right == n) {
+                    zigleft(n);
+                }else {
+                    zigright(n);
+                }
+                break;
+            }
+
+            bool gtop_right = false;
+            if (gp->right == par) {
+                gtop_right = true;
+            }
+
+            bool ptop_right = false;
+            if (par->right == n) {
+                ptop_right = true;
+            }
+
+            //For ZIGZIGLEFT
+            if (gtop_right && ptop_right) {
+                zigleft(par);
+                zigleft(n);
+            }
+
+            //For ZIGZAGLEFT
+            if (gtop_right && !ptop_right) {
+                zigright(n);
+                zigleft(n);
+            }
+
+            //For ZIGZIGRIGHT
+            if (!gtop_right && !ptop_right) {
+                zigright(par);
+                zigright(n);
+            }
+
+            //For ZIGZAGRIGHT
+            if (!gtop_right && ptop_right) {
+                zigleft(n);
+                zigright(n);
+            }
+        } 
     }
 
     void zigleft(node* curr) {
