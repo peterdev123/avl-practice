@@ -114,72 +114,56 @@ class MyBinaryTree : public BinaryTree {
 
     // TODO copy your completed zigleft here
     void zigleft(node* curr) {
-        node* parent = curr->parent;
-        bool isLeft = false;
+        node *x = curr;
+        node *y = curr->parent;
+        node *z = y ? y->parent : nullptr;
+        node *t2 = x->left;
 
-        parent->right = curr->left;
-        if(parent->right != nullptr){
-            parent->right->parent = parent;
-        }
-        curr->left = curr->parent;
-        curr->parent = nullptr;
+        // Update pointers for x and y
+        x->parent = z;
+        x->left = y;
+        y->parent = x;
+        y->right = t2;
 
-        if(parent == root){
-            root = curr;
-            parent->parent = curr;
-        }
-        else{
-            node* grandparent = parent->parent;
-            if(grandparent->left == parent){
-                isLeft = true;
-            }
-
-            curr->parent = grandparent;
-            if(isLeft){
-                grandparent->left = curr;
-            }
-            else{
-                grandparent->right = curr;
-            }
-            parent->parent = curr;
+        if (t2) {
+            t2->parent = y;
         }
 
+        // Update root or z's child pointers
+        if (!z) {
+            root = x;
+        } else if (z->left == y) {
+            z->left = x;
+        } else {
+            z->right = x;
+        }
     }
+
 
     // TODO copy your completed zigright here
     void zigright(node* curr) {
-        node* parent = curr->parent;
+        node *x = curr;
+        node *y = curr->parent;
+        node *z = y ? y->parent : nullptr;
+        node *t2 = x->right;
 
-        bool isLeft = false;
+        // Update pointers for x and y
+        x->parent = z;
+        x->right = y;
+        y->parent = x;
+        y->left = t2;
 
-
-        parent->left = curr->right;
-        if(parent->left != nullptr){
-            parent->left->parent = parent;
+        if (t2) {
+            t2->parent = y;
         }
-        curr->right = parent;
-        curr->parent = nullptr;
 
-
-        if(parent == root){
-            root = curr;
-            parent->parent = curr;
-        }
-        else{
-            node* grandparent = parent->parent;
-            curr->parent = grandparent;
-
-            if(grandparent->left == parent){
-                isLeft = true;
-            }
-
-            if(isLeft){
-                grandparent->left = curr;
-            }
-            else{
-                grandparent->right = curr;
-            }
-            parent->parent = curr;
+        // Update root or z's child pointers
+        if (!z) {
+            root = x;
+        } else if (z->left == y) {
+            z->left = x;
+        } else {
+            z->right = x;
         }
     }
 
