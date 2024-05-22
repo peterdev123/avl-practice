@@ -3,14 +3,16 @@
 // #include "QuickSort.h"
 // #include "InsertionSort.h"
 // #include "MergeSort.h"
-#include "ShellSort.h"
+// #include "ShellSort.h"
+#include "SelectionSort.h"
 using namespace std;
 
 int main() {
     // BubbleSort sorter;
     // InsertionSort sorter;
     // QuickSort sorter;
-    ShellSort sorter;
+    // ShellSort sorter;
+    SelectionSort sorter;
     int array[] = {12, 2, 7, 5, 6, 1, 8};
     int size = sizeof(array) / sizeof(array[0]);
 
