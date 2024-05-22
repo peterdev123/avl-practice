@@ -1,4 +1,5 @@
 #include <iostream>
+#include "Sorting.h"
 using namespace std;
 
 class BubbleSort : Sorting{
