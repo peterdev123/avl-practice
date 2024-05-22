@@ -1,20 +1,24 @@
 #include "mybinarytree.h"
-#include <algorithm>
 
 class BST {
 	BinaryTree* tree = new MyBinaryTree();
 
 	public:
 	bool search(int num) {
-		return search_node(tree->getRoot(), num);
+        node* searched_node = search_node(tree->getRoot(), num);
+		if (searched_node != NULL) {
+            splay(searched_node);
+        }else {
+            return false;
+        }
 	}
 
-	bool search_node(node* n, int num) {
+	node* search_node(node* n, int num) {
 		if (n == NULL) {
-			return false;
+			return NULL;
 		}
 		if (n->elem == num) {
-			return true;
+			return n;
 		}
 		if (num > n->elem) {
 			// proceed to right
@@ -24,36 +28,14 @@ class BST {
 		}
 	}
 
-    node* search1(int num) {
-        return searchNode(tree->getRoot(), num);
-    }
-
-    node* searchNode(node* n, int num) {
-        if (n == NULL) {
-            return nullptr;
-        }
-        if (n->elem == num) {
-            return n;
-        }
-        if (num > n->elem) {
-            return searchNode(n->right, num);
-        } else {
-            return searchNode(n->left, num);
-        }
-    }
-
-    // TODO perform post-processing by checking for violation after insertion
-    // from the node inserted (or from its parent) until the root
 	node* insert(int num) {
 		node* n = tree->getRoot();
 		if (n == NULL) {
 			return tree->addRoot(num);
 		}
-        
-		node* nodeInserted =  insert_node(n, num);
-        checkAll(nodeInserted);
-
-        return nodeInserted;
+        node* inserted_node = insert_node(n, num);
+        search(num);
+		return inserted_node;
 	}
 
 	node* insert_node(node* n, int num) {
@@ -78,20 +60,28 @@ class BST {
 		}
 	}
 
-
-    // TODO perform post-processing by checking for violation after deletion
-    // from the parent of the node removed until the root
     bool remove(int num) {
-        node* nodeRemovedParent = search1(num)->parent;
-        bool isRemoved = remove_node(tree->getRoot(), num);
-        checkAll1(nodeRemovedParent);
-        
-        return isRemoved;
+        search(num);
+        node* removed = remove_node(tree->getRoot(), num);
+        if (removed->right) {
+            search(searchLeftMost(removed->right));
+        }else {
+            return false;
+        }
     }
 
-	bool remove_node(node* n, int num) {
+    int searchLeftMost(node *n) {
+        node* curr = n;
+        if (curr->left) {
+            curr = curr->left;
+        }else {
+            return curr->elem;
+        }
+    }
+
+	node* remove_node(node* n, int num) {
 		if (n == NULL) {
-			return false;
+			return NULL;
 		}
 		if (n->elem == num) {
             if (n->left && n->right) {
@@ -99,14 +89,12 @@ class BST {
                 while (r->left) {
                     r = r->left;
                 }
-                node* rpar = r->parent;
                 int rem = tree->remove(r);
                 n->elem = rem;
-                checkAll1(rpar);
             } else {
     			tree->remove(n);
             }
-            return true;
+            return n;
 		}
 		if (num > n->elem) {
 			return remove_node(n->right, num);
@@ -114,13 +102,12 @@ class BST {
 			return remove_node(n->left, num);
 		}
 	}
-
-    // TODO copy and paste your completed restructure method here
+    // GIVEN the grandparent (or z), find the parent (or y), and the child (or x).
     bool restructure(node* gp) {
         node* par; // parent
         // TODO find parent
-        int leftHeight;
-        int rightHeight;
+        int leftHeight = 0;
+        int rightHeight = 0;
 
         leftHeight = (gp->left) ? gp->left->height() : 0;
         
@@ -136,30 +123,24 @@ class BST {
 
         node* child;
         // TODO find child
-        int leftHeightC;
-        int rightHeightC;
+        int leftHeightC = 0;
+        int rightHeightC = 0;
 
         leftHeightC = (par->left) ? par->left->height() : 0;
 
         rightHeightC = (par->right) ? par->right->height() : 0;
 
         if(leftHeightC == rightHeightC) {
-            if (gtop_right && par->right) {
-                child = par->right;
-            }else if (gtop_right && !par->right) {
-                child = par->left;
+            if(gp->left) {
+                if(par == gp->left) {
+                    leftHeightC++;
+                }
+            } else if(gp->right) {
+                rightHeightC++;
             }
-
-            if (!gtop_right && par->left) {
-                child = par->left;
-            }else if (!gtop_right && !par->left) {
-                child = par->right;
-            }
-        }else if (leftHeightC > rightHeightC) {
-            child = par->left;
-        }else {
-            child = par->right;
         }
+
+        child = (leftHeightC > rightHeightC) ? par->left : par->right;
         
         // This is an indicator of the placement of parent to child (ptoc)
         bool ptoc_right = false;
@@ -219,6 +200,56 @@ class BST {
         return true;
     }
 
+    void splay(node* n) {
+        while (n != tree->getRoot()) {
+            node* par = n->parent;
+            node* gp = par->parent;
+
+            if (!gp) {
+                if(par->right == n) {
+                    zigleft(n);
+                }else {
+                    zigright(n);
+                }
+                break;
+            }
+
+            bool gtop_right = false;
+            if (gp->right == par) {
+                gtop_right = true;
+            }
+
+            bool ptop_right = false;
+            if (par->right == n) {
+                ptop_right = true;
+            }
+
+            //For ZIGZIGLEFT
+            if (gtop_right && ptop_right) {
+                zigleft(par);
+                zigleft(n);
+            }
+
+            //For ZIGZAGLEFT
+            if (gtop_right && !ptop_right) {
+                zigright(n);
+                zigleft(n);
+            }
+
+            //For ZIGZIGRIGHT
+            if (!gtop_right && !ptop_right) {
+                zigright(par);
+                zigright(n);
+            }
+
+            //For ZIGZAGRIGHT
+            if (!gtop_right && ptop_right) {
+                zigleft(n);
+                zigright(n);
+            }
+        } 
+    }
+
     void zigleft(node* curr) {
         tree->zigleft(curr);
     }
@@ -230,81 +261,4 @@ class BST {
 	void print() {
 		tree->print();
 	}
-
-    void checkAll(node *p) {
-        node* dummyNode = p;
-        bool found = false;
-        node* violationNode = nullptr;
-        
-        while (!found && dummyNode) {
-            found = checkViolation(dummyNode->parent);
-            dummyNode = dummyNode->parent;
-        }
-
-        violationNode = dummyNode;
-        bool check = false;
-
-        // The grandparent with violation if found
-        if (violationNode) {
-            check = restructure(violationNode);
-        }
-    }
-
-    void checkAll1(node *p) {
-        node* dummyNode = p;
-        bool found = false;
-        node* violationNode = nullptr;
-
-        while (!found && dummyNode) {
-            found = checkViolation(dummyNode);
-            if (dummyNode->parent && !found) {
-                dummyNode = dummyNode->parent;
-            }
-            
-            if (dummyNode == tree->getRoot()) {
-                if (checkViolation(dummyNode)) {
-                    found = true;
-                }else {
-                    dummyNode = nullptr;
-                }
-            }
-            
-            /*if (dummyNode) {
-                cout << dummyNode->elem << endl;
-            }else {
-                cout << "NO DUMMY NODE!" << endl;
-            }*/
-        }
-
-        violationNode = dummyNode;
-        bool check = false;
-
-        // The node with violation if found
-        if (violationNode) {
-            check = restructure(violationNode);
-        }
-    }
-
-    bool checkViolation(node* p) {
-        if (!p) {
-            return false;
-        }
-
-        int leftHeight = (p->left) ? p->left->height() : 0;
-        int rightHeight = (p->right) ? p->right->height() : 0;
-        int gap = 0;
-
-        if (rightHeight == leftHeight) {
-            return false;
-        }
-
-        // cout << leftHeight << " " << rightHeight << endl;
-
-        gap = abs(rightHeight - leftHeight);
-
-        if (gap >= 2) {
-            return true;
-        }
-        return false;
-    }
 };

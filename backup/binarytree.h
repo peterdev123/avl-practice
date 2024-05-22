@@ -1,6 +1,6 @@
 // DO NOT modify this file.
-// Copy zigleft and zigright methods into mybinarytree.
-// Then implement node's height & bst's restructure method.
+// Copy and paste your zigleft, zigright, restructure, height.
+// Improve to bst's insert and remove methods.
 
 #include "node.h"
 
